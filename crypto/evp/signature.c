@@ -525,6 +525,14 @@ const char *EVP_SIGNATURE_get0_description(const EVP_SIGNATURE *signature)
     return signature->description;
 }
 
+const char **EVP_SIGNATURE_query_key_types(const EVP_SIGNATURE *signature)
+{
+    if (signature->query_key_types == NULL) {
+        return NULL;
+    }
+    return signature->query_key_types();
+}
+
 void EVP_SIGNATURE_do_all_provided(OSSL_LIB_CTX *libctx,
                                    void (*fn)(EVP_SIGNATURE *signature,
                                               void *arg),
