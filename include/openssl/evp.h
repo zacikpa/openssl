@@ -1973,6 +1973,7 @@ EVP_SIGNATURE *EVP_SIGNATURE_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
 int EVP_SIGNATURE_is_a(const EVP_SIGNATURE *signature, const char *name);
 const char *EVP_SIGNATURE_get0_name(const EVP_SIGNATURE *signature);
 const char *EVP_SIGNATURE_get0_description(const EVP_SIGNATURE *signature);
+const char **EVP_SIGNATURE_query_key_types(const EVP_SIGNATURE *signature);
 void EVP_SIGNATURE_do_all_provided(OSSL_LIB_CTX *libctx,
                                    void (*fn)(EVP_SIGNATURE *signature,
                                               void *data),
