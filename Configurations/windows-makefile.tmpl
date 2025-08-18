@@ -69,7 +69,14 @@ FIPSMODULE={- # We do some extra checking here, as there should be only one
               join(" ", map { platform->dso($_) } @fipsmodules) -}
 FIPSMODULENAME={- die "More that one FIPS module" if scalar @fipsmodules > 1;
                   join(", ", map { basename(platform->dso($_)) } @fipsmodules) -}
-PROGRAMS={- our @PROGRAMS = map { platform->bin($_) } @{$unified_info{programs}}; join(" ", @PROGRAMS) -}
+PROGRAMS={- our @PROGRAMS = map { platform->bin($_) }
+                            grep { !m|^test\\| }
+                            @{$unified_info{programs}};
+            join(" ", @PROGRAMS) -}
+TEST_PROGRAMS={- our @TESTPROGS = map { platform->bin($_) }
+                                  grep { m|^test\\| }
+                                  @{$unified_info{programs}};
+             join(" ", @TESTPROGS) -}
 PROGRAMPDBS={- join(" ", map { $_.".pdb" } @{$unified_info{programs}}) -}
 SCRIPTS={- our @SCRIPTS = @{$unified_info{scripts}}; join(" ", @SCRIPTS) -}
 {- output_off() if $disabled{makedepend}; "" -}
@@ -414,10 +421,11 @@ PROCESSOR= {- $config{processor} -}
 
 # The main targets ###################################################
 
-{- dependmagic('build_sw'); -}: build_libs_nodep build_modules_nodep build_programs_nodep copy-utils
+{- dependmagic('build_sw'); -}: build_libs_nodep build_modules_nodep build_programs_nodep build_tests_nodep copy-utils
 {- dependmagic('build_libs'); -}: build_libs_nodep
 {- dependmagic('build_modules'); -}: build_modules_nodep
 {- dependmagic('build_programs'); -}: build_programs_nodep
+{- dependmagic('build_tests'); -}: build_tests_nodep
 
 build_docs: build_html_docs
 build_html_docs: $(HTMLDOCS1) $(HTMLDOCS3) $(HTMLDOCS5) $(HTMLDOCS7)
@@ -430,9 +438,11 @@ build_modules_nodep: $(MODULES)
 	@
 build_programs_nodep: $(PROGRAMS) $(SCRIPTS)
 	@
+build_tests_nodep: $(TEST_PROGRAMS)
+	@
 
 # Kept around for backward compatibility
-build_apps build_tests: build_programs
+build_apps: build_programs
 
 # Convenience target to prebuild all generated files, not just the mandatory
 # ones
@@ -446,7 +456,7 @@ build_all_generated: $(GENERATED_MANDATORY) $(GENERATED) build_docs
 all: build_sw {- "build_docs" if !$disabled{docs}; -}
 
 test: tests
-{- dependmagic('tests'); -}: build_programs_nodep build_modules_nodep copy-utils
+{- dependmagic('tests'); -}: build_programs_nodep build_tests_nodep build_modules_nodep copy-utils
 	$(MAKE) /$(MAKEFLAGS) run_tests
 run_tests:
 	@{- output_off() if $disabled{tests}; "\@rem" -}
@@ -476,6 +486,7 @@ clean: libclean
 	{- join("\n\t", map { "-del /Q /F $_" } @HTMLDOCS5) || "\@rem" -}
 	{- join("\n\t", map { "-del /Q /F $_" } @HTMLDOCS7) || "\@rem" -}
 	{- join("\n\t", map { "-del /Q /F $_" } @PROGRAMS) || "\@rem" -}
+	{- join("\n\t", map { "-del /Q /F $_" } @TEST_PROGRAMS) || "\@rem" -}
 	{- join("\n\t", map { "-del /Q /F $_" } @MODULES) || "\@rem" -}
 	{- join("\n\t", map { "-del /Q /F $_" } @SCRIPTS) || "\@rem" -}
 	{- join("\n\t", map { "-del /Q /F $_" } @GENERATED_MANDATORY) || "\@rem" -}

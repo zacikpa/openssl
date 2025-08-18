@@ -117,7 +117,13 @@ FIPSMODULENAME={- die "More that one FIPS module" if scalar @fipsmodules > 1;
 PROGRAMS={- join(" \\\n" . ' ' x 9,
                  fill_lines(" ", $COLUMNS - 9,
                             map { platform->bin($_) }
+                            grep { !m|^test/| }
                             @{$unified_info{programs}})) -}
+TEST_PROGRAMS={- join(" \\\n" . ' ' x 9,
+                      fill_lines(" ", $COLUMNS - 9,
+                                 map { platform->bin($_) }
+                                 grep { m|^test/| }
+                                 @{$unified_info{programs}})) -}
 SCRIPTS={- join(" \\\n" . ' ' x 8,
                 fill_lines(" ", $COLUMNS - 8, @{$unified_info{scripts}})) -}
 {- output_off() if $disabled{makedepend}; "" -}
@@ -528,10 +534,11 @@ LANG=C
 
 ##@ Software
 
-{- dependmagic('build_sw', 'Build all the software (default target)'); -}: build_libs_nodep build_modules_nodep build_programs_nodep link-utils
+{- dependmagic('build_sw', 'Build all the software (default target)'); -}: build_libs_nodep build_modules_nodep build_programs_nodep build_tests_nodep link-utils
 {- dependmagic('build_libs', 'Build the libraries libssl and libcrypto'); -}: build_libs_nodep
 {- dependmagic('build_modules', 'Build the modules (i.e. providers and engines)'); -}: build_modules_nodep
 {- dependmagic('build_programs', 'Build the openssl executables and scripts'); -}: build_programs_nodep
+{- dependmagic('build_tests', 'Build the tests'); -}: build_tests_nodep
 
 all: build_sw {- "build_docs" if !$disabled{docs}; -} ## Build software and documentation
 debuginfo: $(SHLIBS)
@@ -553,9 +560,10 @@ build_generated: $(GENERATED_MANDATORY)
 build_libs_nodep: $(LIBS) {- join(" ",map { platform->sharedlib_simple($_) // platform->sharedlib_import($_) // platform->sharedlib($_) // () } @{$unified_info{libraries}}) -}
 build_modules_nodep: $(MODULES)
 build_programs_nodep: $(PROGRAMS) $(SCRIPTS)
+build_tests_nodep: $(TEST_PROGRAMS)
 
 # Kept around for backward compatibility
-build_apps build_tests: build_programs
+build_apps: build_programs
 
 # Convenience target to prebuild all generated files, not just the mandatory
 # ones
@@ -573,7 +581,7 @@ help: ## Show this help screen
 
 ##@ Testing
 test: tests ## Run tests (alias of "tests")
-{- dependmagic('tests', 'Run tests'); -}: build_programs_nodep build_modules_nodep link-utils
+{- dependmagic('tests', 'Run tests'); -}: build_programs_nodep build_tests_nodep build_modules_nodep link-utils
 	"$(MAKE)" run_tests
 run_tests: FORCE
 	@ : {- output_off() if $disabled{tests}; "" -}

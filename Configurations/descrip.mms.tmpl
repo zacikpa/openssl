@@ -326,7 +326,12 @@ FIPSMODULE={- # We do some extra checking here, as there should be only one
               join(" ", map { platform->dso($_) } @fipsmodules) -}
 FIPSMODULENAME={- die "More that one FIPS module" if scalar @fipsmodules > 1;
                   join(", ", map { basename(platform->dso($_)) } @fipsmodules) -}
-PROGRAMS={- join(", ", map { "-\n\t".$_.".EXE" } @{$unified_info{programs}}) -}
+PROGRAMS={- join(", ", map { "-\n\t".$_.".EXE" }
+                       grep { !m|^\[\.test\]| }
+                       @{$unified_info{programs}}) -}
+TEST_PROGRAMS={- join(", ", map { "-\n\t".$_.".EXE" }
+                            grep { m|^\[\.test\]| }
+                            @{$unified_info{programs}}) -}
 SCRIPTS={- join(", ", map { "-\n\t".$_ } @{$unified_info{scripts}}) -}
 {- output_off() if $disabled{makedepend}; "" -}
 DEPS={- our @deps = map { platform->isobj($_) ? platform->dep($_) : $_ }
@@ -487,10 +492,11 @@ NODEBUG=@
 
 # The main targets ###################################################
 
-{- dependmagic('build_sw'); -} : build_libs_nodep, build_modules_nodep, build_programs_nodep
+{- dependmagic('build_sw'); -} : build_libs_nodep, build_modules_nodep, build_programs_nodep, build_tests_nodep
 {- dependmagic('build_libs'); -} : build_libs_nodep
 {- dependmagic('build_modules'); -} : build_modules_nodep
 {- dependmagic('build_programs'); -} : build_programs_nodep
+{- dependmagic('build_tests'); -} : build_tests_nodep
 
 build_generated_pods : $(GENERATED_PODS)
 build_docs : build_html_docs
@@ -500,9 +506,10 @@ build_generated : $(GENERATED_MANDATORY)
 build_libs_nodep : $(LIBS), $(SHLIBS)
 build_modules_nodep : $(MODULES)
 build_programs_nodep : $(PROGRAMS), $(SCRIPTS)
+build_tests_nodep : $(TEST_PROGRAMS)
 
 # Kept around for backward compatibility
-build_apps build_tests : build_programs
+build_apps: build_programs
 
 # Convenience target to prebuild all generated files, not just the mandatory
 # ones
@@ -516,7 +523,7 @@ build_all_generated : $(GENERATED_MANDATORY) $(GENERATED) build_docs
 all : build_sw build_docs
 
 test : tests
-{- dependmagic('tests'); -} : build_programs_nodep, build_modules_nodep
+{- dependmagic('tests'); -} : build_programs_nodep, build_tests_nodep, build_modules_nodep
 	$(MMS) $(MMSQUALIFIERS) run_tests
 run_tests :
         @ ! {- output_off() if $disabled{tests}; "" -}
