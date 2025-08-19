@@ -554,6 +554,9 @@ build_libs_nodep: $(LIBS) {- join(" ",map { platform->sharedlib_simple($_) // pl
 build_modules_nodep: $(MODULES)
 build_programs_nodep: $(PROGRAMS) $(SCRIPTS)
 
+build_installable_sw: build_libs_nodep build_modules_nodep build_installable_programs link-utils
+build_installable_programs: $(INSTALL_PROGRAMS) $(SCRIPTS)
+
 # Kept around for backward compatibility
 build_apps build_tests: build_programs
 
@@ -671,7 +674,7 @@ uninstall_docs: uninstall_man_docs uninstall_html_docs ## Uninstall manpages and
 	$(RM) -r "$(DESTDIR)$(DOCDIR)"
 
 {- output_off() if $disabled{fips}; "" -}
-install_fips: build_sw $(INSTALL_FIPSMODULECONF)
+install_fips: build_installable_sw $(INSTALL_FIPSMODULECONF)
 	@[ -n "$(INSTALLTOP)" ] || (echo INSTALLTOP should not be empty; exit 1)
 	@$(PERL) $(SRCDIR)/util/mkdir-p.pl "$(DESTDIR)$(MODULESDIR)"
 	@$(PERL) $(SRCDIR)/util/mkdir-p.pl "$(DESTDIR)$(OPENSSLDIR)"
@@ -956,7 +959,7 @@ install_runtime_libs: build_libs
 		: {- output_on() if windowsdll(); "" -}; \
 	done
 
-install_programs: install_runtime_libs build_programs
+install_programs: install_runtime_libs build_installable_programs
 	@[ -n "$(INSTALLTOP)" ] || (echo INSTALLTOP should not be empty; exit 1)
 	@$(PERL) $(SRCDIR)/util/mkdir-p.pl "$(DESTDIR)$(bindir)"
 	@$(ECHO) "*** Installing runtime programs"
