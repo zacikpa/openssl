@@ -203,17 +203,15 @@ X509_ALGOR *PKCS5_pbkdf2_set_ex(int iter, unsigned char *salt, int saltlen,
         ERR_raise(ERR_LIB_ASN1, ERR_R_PASSED_INVALID_ARGUMENT);
         goto err;
     }
-    if (saltlen == 0)
-        saltlen = PKCS5_DEFAULT_PBE2_SALT_LEN;
-    if ((osalt->data = OPENSSL_malloc(saltlen)) == NULL)
-        goto err;
 
+    if (saltlen != 0 && (osalt->data = OPENSSL_malloc(saltlen)) == NULL)
+        goto err;
 
     osalt->length = saltlen;
 
     if (salt) {
         memcpy(osalt->data, salt, saltlen);
-    } else if (RAND_bytes_ex(libctx, osalt->data, saltlen, 0) <= 0) {
+    } else if (saltlen != 0 && RAND_bytes_ex(libctx, osalt->data, saltlen, 0) <= 0) {
         ERR_raise(ERR_LIB_ASN1, ERR_R_RAND_LIB);
         goto err;
     }

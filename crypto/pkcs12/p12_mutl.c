@@ -184,8 +184,8 @@ static int pkcs12_gen_mac(PKCS12 *p12, const char *pass, int passlen,
         return 0;
     }
 
-    salt = p12->mac->salt->data;
-    saltlen = p12->mac->salt->length;
+    salt = NULL;
+    saltlen = 0;
     if (p12->mac->iter == NULL)
         iter = 1;
     else
@@ -403,20 +403,8 @@ static int pkcs12_setup_mac(PKCS12 *p12, int iter, unsigned char *salt, int salt
             return 0;
         }
     }
-    if (saltlen == 0)
-        saltlen = PKCS12_SALT_LEN;
-    else if (saltlen < 0)
-        return 0;
-    if ((p12->mac->salt->data = OPENSSL_malloc(saltlen)) == NULL)
-        return 0;
+    p12->mac->salt->data = NULL;
     p12->mac->salt->length = saltlen;
-    if (salt == NULL) {
-        if (RAND_bytes_ex(p12->authsafes->ctx.libctx, p12->mac->salt->data,
-                          (size_t)saltlen, 0) <= 0)
-            return 0;
-    } else {
-        memcpy(p12->mac->salt->data, salt, saltlen);
-    }
     X509_SIG_getm(p12->mac->dinfo, &macalg, NULL);
     if (!X509_ALGOR_set0(macalg, OBJ_nid2obj(nid), V_ASN1_NULL, NULL)) {
         ERR_raise(ERR_LIB_PKCS12, ERR_R_ASN1_LIB);
@@ -470,24 +458,14 @@ int PKCS12_set_pbmac1_pbkdf2(PKCS12 *p12, const char *pass, int passlen,
         goto err;
     }
 
-    if (salt == NULL) {
-        known_salt = OPENSSL_malloc(saltlen);
-        if (known_salt == NULL)
-            goto err;
-
-        if (RAND_bytes_ex(NULL, known_salt, saltlen, 0) <= 0) {
-            ERR_raise(ERR_LIB_PKCS12, ERR_R_RAND_LIB);
-            goto err;
-        }
-    }
 
     param = PBMAC1PARAM_new();
     hmac_alg = X509_ALGOR_new();
-    alg = PKCS5_pbkdf2_set(iter, salt ? salt : known_salt, saltlen, prf_nid, keylen);
+    alg = PKCS5_pbkdf2_set(iter, known_salt, 0, prf_nid, keylen);
     if (param == NULL || hmac_alg == NULL || alg == NULL)
         goto err;
 
-    if (pkcs12_setup_mac(p12, iter, salt ? salt : known_salt, saltlen,
+    if (pkcs12_setup_mac(p12, iter, known_salt, 0,
                          NID_pbmac1) == PKCS12_ERROR) {
         ERR_raise(ERR_LIB_PKCS12, PKCS12_R_MAC_SETUP_ERROR);
         goto err;
@@ -524,6 +502,5 @@ int PKCS12_set_pbmac1_pbkdf2(PKCS12 *p12, const char *pass, int passlen,
 
  err:
     PBMAC1PARAM_free(param);
-    OPENSSL_free(known_salt);
     return ret;
 }
