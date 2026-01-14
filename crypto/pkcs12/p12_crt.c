@@ -252,7 +252,7 @@ PKCS12_SAFEBAG *PKCS12_add_key_ex(STACK_OF(PKCS12_SAFEBAG) **pbags,
     }
     if (nid_key != -1) {
         /* This call does not take ownership of p8 */
-        bag = PKCS12_SAFEBAG_create_pkcs8_encrypt_ex(nid_key, pass, -1, NULL, 0,
+        bag = PKCS12_SAFEBAG_create_pkcs8_encrypt_ex(nid_key, pass, -1, NULL, 64,
                                                      iter, p8, ctx, propq);
     } else {
         bag = PKCS12_SAFEBAG_create0_p8inf(p8);
@@ -324,7 +324,7 @@ int PKCS12_add_safe_ex(STACK_OF(PKCS7) **psafes, STACK_OF(PKCS12_SAFEBAG) *bags,
     if (nid_safe == -1)
         p7 = PKCS12_pack_p7data(bags);
     else
-        p7 = PKCS12_pack_p7encdata_ex(nid_safe, pass, -1, NULL, 0, iter, bags, ctx, propq);
+        p7 = PKCS12_pack_p7encdata_ex(nid_safe, pass, -1, NULL, 64, iter, bags, ctx, propq);
     if (p7 == NULL)
         goto err;
 
