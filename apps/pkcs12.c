@@ -264,7 +264,7 @@ int pkcs12_main(int argc, char **argv)
             enc_name = ciphername = opt_unknown();
             break;
         case OPT_ITER:
-            maciter = iter = opt_int_arg();
+            maciter = opt_int_arg();
             break;
         case OPT_NOITER:
             iter = 1;
