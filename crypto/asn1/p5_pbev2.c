@@ -107,7 +107,7 @@ X509_ALGOR *PKCS5_pbe2_set_iv_ex(const EVP_CIPHER *cipher, int iter,
     ERR_set_mark();
     if ((prf_nid == -1) &&
         EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_PBE_PRF_NID, 0, &prf_nid) <= 0) {
-        prf_nid = NID_hmacWithSHA256;
+        prf_nid = NID_hmacWithSHA512;
     }
     ERR_pop_to_mark();
     EVP_CIPHER_CTX_free(ctx);
