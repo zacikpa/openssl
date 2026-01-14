@@ -212,7 +212,7 @@ static int pkcs12_gen_mac(PKCS12 *p12, const char *pass, int passlen,
     }
     (void)ERR_pop_to_mark();
 
-    keylen = EVP_MD_get_size(md);
+    keylen = 32;
     md_nid = EVP_MD_get_type(md);
     if (keylen <= 0)
         goto err;
@@ -460,7 +460,7 @@ int PKCS12_set_pbmac1_pbkdf2(PKCS12 *p12, const char *pass, int passlen,
     if (iter == 0)
         iter = PKCS12_DEFAULT_ITER;
 
-    keylen = EVP_MD_get_size(md_type);
+    keylen = 32;
 
     prf_nid  = ossl_md2hmacnid(prf_md_nid);
     hmac_nid = ossl_md2hmacnid(EVP_MD_get_type(md_type));
