@@ -166,7 +166,7 @@ static int pkcs12_gen_mac(PKCS12 *p12, const char *pass, int passlen,
     const EVP_MD *md;
     EVP_MD *md_fetch;
     HMAC_CTX *hmac = NULL;
-    unsigned char key[EVP_MAX_MD_SIZE], *salt;
+    unsigned char key[256], *salt;
     int saltlen, iter;
     char md_name[80];
     int keylen = 0;
@@ -212,7 +212,7 @@ static int pkcs12_gen_mac(PKCS12 *p12, const char *pass, int passlen,
     }
     (void)ERR_pop_to_mark();
 
-    keylen = EVP_MD_get_size(md);
+    keylen = 256;
     md_nid = EVP_MD_get_type(md);
     if (keylen <= 0)
         goto err;
@@ -294,7 +294,7 @@ int PKCS12_gen_mac(PKCS12 *p12, const char *pass, int passlen,
 /* Verify the mac */
 int PKCS12_verify_mac(PKCS12 *p12, const char *pass, int passlen)
 {
-    unsigned char mac[EVP_MAX_MD_SIZE];
+    unsigned char mac[256];
     unsigned int maclen;
     const ASN1_OCTET_STRING *macoct;
     const X509_ALGOR *macalg;
@@ -345,7 +345,7 @@ int PKCS12_set_mac(PKCS12 *p12, const char *pass, int passlen,
                    unsigned char *salt, int saltlen, int iter,
                    const EVP_MD *md_type)
 {
-    unsigned char mac[EVP_MAX_MD_SIZE];
+    unsigned char mac[256];
     unsigned int maclen;
     ASN1_OCTET_STRING *macoct;
 
@@ -437,7 +437,7 @@ int PKCS12_set_pbmac1_pbkdf2(PKCS12 *p12, const char *pass, int passlen,
                              unsigned char *salt, int saltlen, int iter,
                              const EVP_MD *md_type, const char *prf_md_name)
 {
-    unsigned char mac[EVP_MAX_MD_SIZE];
+    unsigned char mac[256];
     unsigned int maclen;
     ASN1_OCTET_STRING *macoct;
     X509_ALGOR *alg = NULL;
@@ -460,7 +460,7 @@ int PKCS12_set_pbmac1_pbkdf2(PKCS12 *p12, const char *pass, int passlen,
     if (iter == 0)
         iter = PKCS12_DEFAULT_ITER;
 
-    keylen = EVP_MD_get_size(md_type);
+    keylen = 256;
 
     prf_nid  = ossl_md2hmacnid(prf_md_nid);
     hmac_nid = ossl_md2hmacnid(EVP_MD_get_type(md_type));
